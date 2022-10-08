@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='upload.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>File Upload Viewer</h1>
+    </div>
+    <div class="container">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div>
+                <label for="upload">
+                    <input type="file" id="upload" name='file'>
+                    Upload Files
+                </label>
+            </div>
+            <div class="files">
+                <h2>Files Selected</h2>
+                <ul></ul>
+            </div>
+            <input type="submit" value="Submit" name="submit" id="submit" />
+        </form>
+    </div>
+
+    <script>
+        let state = {};
+
+        // state management
+        function updateState(newState) {
+            state = { ...state, ...newState };
+            console.log(state);
+        }
+
+        // event handlers
+        $("input").change(function (e) {
+            let files = document.getElementsByTagName("input")[0].files;
+            let filesArr = Array.from(files);
+            updateState({ files: files, filesArr: filesArr });
+
+            renderFileList();
+        });
+
+        $(".files").on("click", "li > i", function (e) {
+            let key = $(this)
+                .parent()
+                .attr("key");
+            let curArr = state.filesArr;
+            curArr.splice(key, 1);
+            updateState({ filesArr: curArr });
+            renderFileList();
+        });
+
+        $("form").on("submit", function (e) {
+            // e.preventDefault();
+            console.log(state);
+            renderFileList();
+        });
+
+        // render functions
+        function renderFileList() {
+            let fileMap = state.filesArr.map((file, index) => {
+                let suffix = "bytes";
+                let size = file.size;
+                if (size >= 1024 && size < 1024000) {
+                    suffix = "KB";
+                    size = Math.round(size / 1024 * 100) / 100;
+                } else if (size >= 1024000) {
+                    suffix = "MB";
+                    size = Math.round(size / 1024000 * 100) / 100;
+                }
+                document.cookie = `filesize=${size}${suffix}`;
+                return `<li key="${index}">${file.name
+                    } <span class="file-size">${size} ${suffix}</span><i class="material-icons md-48">delete</i></li>`;
+            });
+            $("ul").html(fileMap);
+        }
+
+    </script>
+</body>
+
+</html>
